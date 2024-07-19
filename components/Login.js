@@ -1,30 +1,109 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWater} from '@fortawesome/free-solid-svg-icons';
+import { faWater, faCircleXmark} from '@fortawesome/free-solid-svg-icons';
 import { login } from '../reducers/user';
-import Signup from "./signup"; 
-import Signin from "./signin"; 
 import styles from "../styles/Login.module.css";
+import { Modal } from 'antd';
 
 function Login() {
 
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
 	const user = useSelector((state) => state.user.value);
 
-	const [isModalVisible, setIsModalVisible] = useState(false);
- 
-  const showModal = () => {
-		setIsModalVisible(!isModalVisible);
-	};
+  const [isModalVisibleSignup, setIsModalVisibleSignup] = useState(false);
+	const [isModalVisibleSignin, setIsModalVisibleSignin] = useState(false);
+	const [signInUsername, setSignInUsername] = useState('');
+	const [signInPassword, setSignInPassword] = useState('');
+  const [signUpName, setSignUpName] = useState('')
+	const [signUpUsername, setSignUpUsername] = useState('');
+	const [signUpPassword, setSignUpPassword] = useState('');
 
+
+
+  const handleConnection = () => {
+    fetch('http://localhost:3000/users/signin', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username: signInUsername, password: signInPassword }),
+}).then(response => response.json())
+  .then(data => {
+    if (data.result) {
+      dispatch(login({ username: signUpUsername, token: data.token }));
+                setSignInUsername('');
+      setSignInPassword('');
+      setIsModalVisibleSignin(false)
+    }
+  });
+};
+
+const handleRegister = () => {
+  fetch('http://localhost:3000/users/signup', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ name: signUpName, username: signUpUsername, password: signUpPassword }),
+}).then(response => response.json())
+.then(data => {
+  if (data.result) {
+    dispatch(login({ name: signUpName, username: signUpUsername, token: data.token }));
+    setSignUpName('');
+              setSignUpUsername('');
+    setSignUpPassword('');
+    setIsModalVisibleSignup(false)
+  }
+});
+};
+
+const showModalin = () => {
+  setIsModalVisibleSignin(!isModalVisibleSignin);
+};
+
+const showModalup = () => {
+  setIsModalVisibleSignup(!isModalVisibleSignup)
+}
+
+let modalContentSignin;
+if (!user.isConnected) {
+  modalContentSignin = (
+    <div className={styles.registerContainer}>
+      <div className={styles.registerSection}>
+          <div className={styles.logotops}>
+                  <FontAwesomeIcon  className={styles.logoSup} icon={faWater} />
+                  <FontAwesomeIcon  className={styles.cross} icon={faCircleXmark} onClick={()=> setIsModalVisibleSignin(false)} />
+          </div>
+        <p>Connect to Hackatweet</p>
+        <input type="text" placeholder="Username" id="signInUsername" className={styles.inModal} onChange={(e) => setSignInUsername(e.target.value)} value={signInUsername} />
+        <input type="password" placeholder="Password" id="signInPassword" className={styles.inModal}  onChange={(e) => setSignInPassword(e.target.value)} value={signInPassword} />
+        <button id="signin" className={styles.signinC} onClick={() => handleConnection()}>Sign in</button>
+      </div>
+    </div>
+  );
+};
+
+let modalContentSignup;
+if (!user.isConnected) {
+  modalContentSignup = (
+    <div className={styles.registerContainer}>
+				<div className={styles.registerSection}>
+          <div className={styles.logotops}>
+                    <FontAwesomeIcon  className={styles.logoSup} icon={faWater} />
+                    <FontAwesomeIcon  className={styles.cross} icon={faCircleXmark} onClick={()=> setIsModalVisibleSignup(false)} />
+            </div>
+					<p className={styles.create}>Create your Hackatweet account</p>
+           <input type="text" placeholder="Name" id="signUpName" className={styles.inModal} onChange={(e) => setSignUpName(e.target.value)} value={signUpName} />
+					<input type="text" placeholder="Username" id="signUpUsername" className={styles.inModal} onChange={(e) => setSignUpUsername(e.target.value)} value={signUpUsername} />
+					<input type="password" placeholder="Password" id="signUpPassword" className={styles.inModal} onChange={(e) => setSignUpPassword(e.target.value)} value={signUpPassword} />
+					<button id="signup" className={styles.signinC} onClick={() => handleRegister()}>Sign up</button>
+				</div>
+			</div>
+  )
+}
 
 
 
 
   return (
     <div className={styles.home}>
-      <Signin/>
       <main className={styles.main}>
         <div className={styles.leftContainer}>
         <FontAwesomeIcon icon={faWater} className={styles.homeLogoLeft}/>
@@ -34,7 +113,7 @@ function Login() {
           <h1 className={styles.title}>See what's <br/> happening</h1>
           <h2 className={styles.subtitle}>Join Hackatweet today.</h2>
           <div className={styles.signContainer}>
-            <button className={styles.signupBtn}> 
+            <button className={styles.signupBtn} onClick={showModalup}> 
             <div className={styles.bgContainer}>
     <span>Sign up</span>
     <span>Sign up</span>
@@ -56,7 +135,7 @@ function Login() {
       
             </button>
             <p className={styles.question}>Already have an account?</p>  
-            <button className={styles.signupBtn}>
+            <button className={styles.signupBtn} onClick={showModalin}>
 
             <div className={styles.bgContainer}>
     <span>Sign in </span>
@@ -81,6 +160,17 @@ function Login() {
 
         </div>
       </main>
+
+      {isModalVisibleSignin && <div id="react-modals" className={styles.modalun}>
+				<Modal getContainer="#react-modals" className={styles.modal} visible={isModalVisibleSignin} closable={false} footer={null}>
+					{modalContentSignin} 
+				</Modal>
+			</div>}
+      {isModalVisibleSignup && <div id="react-modals" className={styles.modalun}>
+				<Modal getContainer="#react-modals" className={styles.modal} visible={isModalVisibleSignup} closable={false} footer={null}>
+					{modalContentSignup} 
+				</Modal>
+			</div>}
     </div>
   );
 }
